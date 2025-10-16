@@ -1,0 +1,26 @@
+# Exported from Render on 2025-10-16T10:16:37Z
+version: "1"
+services:
+- type: web
+  name: Grafana-AutoBuilder-1
+  runtime: python
+  runtimeVersion: "3.12.4"   # <-- force Python 3.12
+  repo: https://github.com/RoshanSonavane2025/Grafana-AutoBuilder
+  plan: free
+  envVars:
+  - key: ALLOWED_EXTENSIONS
+    sync: false
+  - key: UPLOAD_FOLDER
+    sync: false
+  - key: MAX_CONTENT_LENGTH
+    sync: false
+  - key: SECRET_KEY
+    sync: false
+  - key: FLASK_APP
+    sync: false
+  - key: FLASK_ENV
+    sync: false
+  region: oregon
+  buildCommand: pip install -r requirements.txt
+  startCommand: gunicorn app:app
+  autoDeployTrigger: commit
