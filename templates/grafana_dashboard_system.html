@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafana AutoBuilder</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./static/styles.css">
+</head>
+<body>
+    <!-- Mobile Toggle -->
+    <button class="mobile-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-chart-line" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
+            <h2>Grafana AutoBuilder</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item active" onclick="showPage('home')">
+                <i class="fas fa-home"></i>
+                Home
+            </div>
+            <div class="nav-item" onclick="showPage('upload')">
+                <i class="fas fa-upload"></i>
+                Upload & Generate
+            </div>
+            <div class="nav-item" onclick="showPage('history')">
+                <i class="fas fa-history"></i>
+                History
+            </div>
+            <div class="nav-item" onclick="showPage('export')">
+                <i class="fas fa-download"></i>
+                Export
+            </div>
+            <div class="nav-item" onclick="showPage('settings')">
+                <i class="fas fa-gear"></i>
+                Settings
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1 id="pageTitle">Dashboard Overview</h1>
+        </div>
+
+        <div class="content">
+            <!-- Message -->
+            <div id="message">
+            </div>
+            <!-- Home Page -->
+            <div id="home" class="page-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-chart-pie"></i>
+                        <div class="stat-number" id="totalDashboards">0</div>
+                        <div class="stat-label">Total Dashboards</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-file-csv"></i>
+                        <div class="stat-number" id="totalUploads">0</div>
+                        <div class="stat-label">CSV Uploads</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-download"></i>
+                        <div class="stat-number" id="totalExports">0</div>
+                        <div class="stat-label">Exports Generated</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Welcome to Grafana Dashboard Manager</h3>
+                    <p style="color: #6c757d; line-height: 1.6; margin-bottom: 20px;">
+                        This application helps you manage your Grafana dashboards efficiently. You can upload CSV files to automatically generate dashboards, 
+                        view your creation history, and export dashboard configurations for backup or migration purposes.
+                    </p>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="showPage('upload')">
+                            <i class="fas fa-upload"></i> Upload CSV
+                        </button>
+                        <button class="btn btn-secondary" onclick="showPage('history')">
+                            <i class="fas fa-history"></i> View History
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Recent Activity</h3>
+                    <div id="recentActivity">
+                        <div class="empty-state">
+                            <i class="fas fa-clock"></i>
+                            <p>No recent activity</p>
+                        </div>
+                    </div>
+                </div>
+                <small style="color: #6c757d; margin-top: 5px; display: block;">Made By Roshan : Grafana AutoBuilder version 1.0</small>
+                
+            </div>
+
+            <!-- Upload Page -->
+            <div id="upload" class="page-section">
+                <div class="card">
+                    <h3>Upload CSV & Generate Dashboard</h3>
+                    <form id="uploadForm">
+                        <div class="form-group">
+                            <label for="folderUID">Grafana Folder UID (Optional)</label>
+                            <input type="text" class="form-control" id="folderUID" placeholder="Enter Grafana Folder UID">
+                            <small style="color: #6c757d; margin-top: 5px; display: block;">Leave empty to use the default folder</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dashboardName">Grafana Dashboard Name (Optional)</label>
+                            <input type="text" class="form-control" id="dashboardName" placeholder="Enter Grafana Dashboard Name">
+                            <small style="color: #6c757d; margin-top: 5px; display: block;">Leave empty to use the default dashboard name</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>CSV File</label>
+                            <div class="file-upload-area" id="fileUploadArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div class="file-upload-text">
+                                    Drag & drop your CSV file here or click to browse
+                                </div>
+                                <div id="fileInfo" class="file-info" style="display: none;"></div>
+                            </div>
+                            <input type="file" id="csvFile" accept=".csv" style="display: none;">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="uploadBtn">
+                            <i class="fas fa-upload"></i> Generate Dashboard
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- History Page -->
+            <div id="history" class="page-section">
+                <div class="card">
+                    <h3>Dashboard Creation History</h3>
+                    <table id="historyList">
+                        <thead>
+                            <tr>
+                                <th>Dashboard Name</th>
+                                <th>Folder UID</th>
+                                <th>Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable">
+                            <tr class="empty-state">
+                            <td><i class="fas fa-history"></i>
+                            <p>No dashboards created yet. Upload your first CSV file to get started!</p></td>
+                            
+                        </tr> 
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+
+            <!-- Export Page -->
+            <div id="export" class="page-section">
+                <div class="card">
+                    <h3>Export Dashboard Configuration</h3>
+                    <form id="exportForm">
+                        <div class="form-group">
+                            <label for="dashboardUID">Grafana Dashboard UID</label>
+                            <input type="text" class="form-control" id="dashboardUID" placeholder="Enter Dashboard UID" required>
+                            <small style="color: #6c757d; margin-top: 5px; display: block;">The unique identifier of the dashboard you want to export</small>
+                        </div>
+
+                        <div class="export-controls">
+                            <button type="button" class="btn btn-primary" onclick="exportDashboard('json')">
+                                <i class="fas fa-file-code"></i> Export as JSON
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="exportDashboard('csv')">
+                                <i class="fas fa-file-csv"></i> Export as CSV
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+            <div id="settings"  class="page-section">
+                <div class="card">
+                    <h3>Settings</h3>
+                    <form id="settingsForm" >
+                        <div class="form-group">
+                            <label for="grafanaURL">Grafana URL</label>
+                            <input type="text" class="form-control" id="grafanaURL" name="grafanaURL" placeholder="Enter Grafana URL" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="grafanaKEY">Grafana API KEY</label>
+                            <input type="text" class="form-control" id="grafanaKEY" name="grafanaKEY" placeholder="Enter Grafana API KEY" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="./static/script.js"></script>
+</body>
+</html>
