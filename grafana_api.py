@@ -86,12 +86,12 @@ class GrafanaAPI:
                 panel = json.loads(panel_code['panel_code'])
 
                 # Auto layout (2 panels per row)
-                panel['gridPos'] = {
-                    'x': (idx % 2) * 12,  # two panels per row
-                    'y': (idx // 2) * 8,  # each row height 8
-                    'w': 12,
-                    'h': 8
-                }
+                # panel['gridPos'] = {
+                #     'x': (idx % 2) * 12,  # two panels per row
+                #     'y': (idx // 2) * 8,  # each row height 8
+                #     'w': 12,
+                #     'h': 8
+                # }
 
                 dashboard['panels'].append(panel)
 
@@ -128,6 +128,11 @@ class GrafanaAPI:
             logger.error(f"Failed to create or update dashboard: {str(e)}")
             return {'error': f"Failed to create or update dashboard: {str(e)}"}
 
+
+    def get_folders(self) -> List[dict]:
+        """Get all folders in Grafana."""
+        return self._make_request('GET', 'api/folders')
+    
     def export_dashboard_panels(self, dashboard_uid: str) -> List[dict]:
         """Export panels from a dashboard."""
         dashboard = self._make_request('GET', f'api/dashboards/uid/{dashboard_uid}')

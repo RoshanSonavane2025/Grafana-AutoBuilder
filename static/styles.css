@@ -254,31 +254,46 @@
             margin-top: 20px;
         }
 
-        .message{
-            color: #800020;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 20px;
-            margin-bottom: 20px;
-
-        }
 
         /* Notifications */
-        .notification {
-            position: fixed;
-            top: 10px;
-            left:20px;
-            background: #28a745;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(128,0,32,0.08);
-            transform: translateX(100%);
-        }
+.notification {
+    position: fixed;
+    top: 10%;
+    right: 20%;
+    background: #28a745;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(128,0,32,0.08);
+    transform: translateX(100%);
+    animation: slide-in 0.3s ease forwards;
+}
 
-        .notification.show {
-            transform: translateX(0);
-        }
+.notification.show {
+    transform: translateX(0);
+}
+.notification.hide {
+    transform: translateX(100%);
+}
+
+@keyframes slide-in {
+    0% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-out {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
 
         .notification.success {
             background: #28a745;

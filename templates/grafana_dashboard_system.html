@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,12 +9,13 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="./static/styles.css">
 </head>
+
 <body>
     <!-- Mobile Toggle -->
     <button class="mobile-toggle" onclick="toggleSidebar()">
         <i class="fas fa-bars"></i>
     </button>
-    
+
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
@@ -52,9 +54,6 @@
         </div>
 
         <div class="content">
-            <!-- Message -->
-            <div id="message">
-            </div>
             <!-- Home Page -->
             <div id="home" class="page-section active">
                 <div class="stats-grid">
@@ -78,8 +77,10 @@
                 <div class="card">
                     <h3>Welcome to Grafana Dashboard Manager</h3>
                     <p style="color: #6c757d; line-height: 1.6; margin-bottom: 20px;">
-                        This application helps you manage your Grafana dashboards efficiently. You can upload CSV files to automatically generate dashboards, 
-                        view your creation history, and export dashboard configurations for backup or migration purposes.
+                        This application helps you manage your Grafana dashboards efficiently. You can upload CSV files
+                        to automatically generate dashboards,
+                        view your creation history, and export dashboard configurations for backup or migration
+                        purposes.
                     </p>
                     <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                         <button class="btn btn-primary" onclick="showPage('upload')">
@@ -100,8 +101,9 @@
                         </div>
                     </div>
                 </div>
-                <small style="color: #6c757d; margin-top: 5px; display: block;">Made By Roshan : Grafana AutoBuilder version 1.0</small>
-                
+                <small style="color: #6c757d; margin-top: 5px; display: block;">Made By Roshan : Grafana AutoBuilder
+                    version 1.0</small>
+
             </div>
 
             <!-- Upload Page -->
@@ -110,17 +112,21 @@
                     <h3>Upload CSV & Generate Dashboard</h3>
                     <form id="uploadForm">
                         <div class="form-group">
-                            <label for="folderUID">Grafana Folder UID (Optional)</label>
-                            <input type="text" class="form-control" id="folderUID" placeholder="Enter Grafana Folder UID">
-                            <small style="color: #6c757d; margin-top: 5px; display: block;">Leave empty to use the default folder</small>
+                            <label for="folderUID">Select Grafana Folder</label>
+                            <select class="form-control" id="folderSelect" required>
+                            </select>
+                            <small style="color: #6c757d; margin-top: 5px; display: block;">Leave empty to use the
+                                default folder</small>
                         </div>
 
                         <div class="form-group">
                             <label for="dashboardName">Grafana Dashboard Name (Optional)</label>
-                            <input type="text" class="form-control" id="dashboardName" placeholder="Enter Grafana Dashboard Name">
-                            <small style="color: #6c757d; margin-top: 5px; display: block;">Leave empty to use the default dashboard name</small>
+                            <input type="text" class="form-control" id="dashboardName"
+                                placeholder="Enter Grafana Dashboard Name">
+                            <small style="color: #6c757d; margin-top: 5px; display: block;">Leave empty to use the
+                                default dashboard name</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>CSV File</label>
                             <div class="file-upload-area" id="fileUploadArea">
@@ -154,10 +160,11 @@
                         </thead>
                         <tbody id="historyTable">
                             <tr class="empty-state">
-                            <td><i class="fas fa-history"></i>
-                            <p>No dashboards created yet. Upload your first CSV file to get started!</p></td>
-                            
-                        </tr> 
+                                <td><i class="fas fa-history"></i>
+                                    <p>No dashboards created yet. Upload your first CSV file to get started!</p>
+                                </td>
+
+                            </tr>
                         </tbody>
 
                     </table>
@@ -171,8 +178,10 @@
                     <form id="exportForm">
                         <div class="form-group">
                             <label for="dashboardUID">Grafana Dashboard UID</label>
-                            <input type="text" class="form-control" id="dashboardUID" placeholder="Enter Dashboard UID" required>
-                            <small style="color: #6c757d; margin-top: 5px; display: block;">The unique identifier of the dashboard you want to export</small>
+                            <input type="text" class="form-control" id="dashboardUID" placeholder="Enter Dashboard UID"
+                                required>
+                            <small style="color: #6c757d; margin-top: 5px; display: block;">The unique identifier of the
+                                dashboard you want to export</small>
                         </div>
 
                         <div class="export-controls">
@@ -188,18 +197,28 @@
             </div>
 
 
-            <div id="settings"  class="page-section">
+            <div id="settings" class="page-section">
                 <div class="card">
                     <h3>Settings</h3>
-                    <form id="settingsForm" >
+                    <form id="settingsForm">
                         <div class="form-group">
                             <label for="grafanaURL">Grafana URL</label>
-                            <input type="text" class="form-control" id="grafanaURL" name="grafanaURL" placeholder="Enter Grafana URL" required>
+                            <input type="text" class="form-control" id="grafanaURL" name="grafanaURL"
+                                placeholder="Enter Grafana URL" required>
                         </div>
                         <div class="form-group">
                             <label for="grafanaKEY">Grafana API KEY</label>
-                            <input type="text" class="form-control" id="grafanaKEY" name="grafanaKEY" placeholder="Enter Grafana API KEY" required>
+                            <div id="grafanaKeyWrapper">
+                                <span id="grafanaKeyDisplay">Already Configured</span>
+                                <button type="button" id="changeKeyBtn" class="btn btn-sm btn-outline-secondary"
+                                    style="margin-left: 10px;">
+                                    Change API Key
+                                </button>
+                            </div>
+                            <input type="text" class="form-control" id="grafanaKEY" name="grafanaKEY"
+                                placeholder="Enter Grafana API KEY" style="display: none;">
                         </div>
+
                         <button type="submit" class="btn btn-primary">Save Settings</button>
                     </form>
                 </div>
@@ -208,4 +227,5 @@
     </div>
     <script src="./static/script.js"></script>
 </body>
+
 </html>

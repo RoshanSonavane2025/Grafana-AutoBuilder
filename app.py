@@ -119,6 +119,15 @@ def generate_dashboard():
         return error_response(str(e), 500)
 
 
+@app.route('/api/grafana/folders', methods=['GET'])
+def get_grafana_folders():
+    try:
+        grafana = GrafanaAPI(api_key=app.config['GRAFANA_API_KEY'], base_url=app.config['GRAFANA_URL'])
+        return jsonify(grafana.get_folders()), 200
+    except Exception as e:
+        app.logger.error(f"Error fetching Grafana folders: {str(e)}")
+        return error_response('Failed to fetch Grafana folders', 500)
+
 # -------------------- Dashboard History --------------------
 @app.route('/api/dashboard/history', methods=['GET'])
 def get_dashboard_history():
@@ -173,6 +182,9 @@ def export_dashboard():
         return error_response(str(e), 500)
 
 
+import requests
+from flask import request, jsonify
+
 @app.route('/api/settings', methods=['POST'])
 def update_settings():
     data = request.get_json()
@@ -182,11 +194,22 @@ def update_settings():
     if not api_key or not base_url:
         return jsonify({'error': 'API key and Grafana URL are required'}), 400
 
+    # ------------------------------
+    # Validate API key by calling Grafana
+    # ------------------------------
+    headers = {"Authorization": f"Bearer {api_key}"}
+    try:
+        resp = requests.get(f"{base_url}/api/org", headers=headers, timeout=5)
+        if resp.status_code != 200:
+            return jsonify({'error': 'Invalid Grafana API key or URL'}), 400
+    except requests.exceptions.RequestException:
+        return jsonify({'error': 'Unable to reach Grafana server'}), 400
+
+    # Save to config only if validation passes
     app.config['GRAFANA_API_KEY'] = api_key
     app.config['GRAFANA_URL'] = base_url
 
     return jsonify({'status': 'success', 'message': 'Settings updated successfully'}), 200
-
 
 @app.route('/api/current_settings', methods=['GET'])
 def get_current_settings():

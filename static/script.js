@@ -25,6 +25,9 @@ function showPage(pageId) {
     if (pageId === 'settings') {
         getCurrentSettings();
     }
+    if (pageId === 'upload') {
+        getGrafanaFolders();
+    }
 
     const titles = {
         'home': 'Dashboard Overview',
@@ -92,25 +95,30 @@ function setupUploadForm() {
     });
 }
 
-async function handleUpload() {
-    const file = document.getElementById('csvFile').files[0];
-    const folderUID = document.getElementById('folderUID').value.trim();
+async function handleUpload(event) {
+    event.preventDefault(); // prevent form submission reload
+
+    const fileInput = document.getElementById('csvFile');
+    const file = fileInput.files[0];
+    const folderUID = document.getElementById('folderSelect').value.trim();
     const dashboardName = document.getElementById('dashboardName').value.trim();
     const uploadBtn = document.getElementById('uploadBtn');
 
     if (!file) {
-        showNotification('Please select a CSV file', 'error');
+        showNotification('Please select or drop a CSV file', 'error');
         return;
     }
 
+    // Show uploading state
     uploadBtn.disabled = true;
     uploadBtn.innerHTML = '<div class="loading"></div> Generating Dashboard...';
 
     try {
         const formData = new FormData();
-        formData.append('file', file); // Flask expects 'file'
+        formData.append('file', file); // CSV file
         formData.append('folder_uid', folderUID);
         formData.append('dashboardName', dashboardName);
+
         const response = await fetch('/api/dashboard/generate', {
             method: 'POST',
             body: formData
@@ -123,15 +131,16 @@ async function handleUpload() {
 
         const data = await response.json();
 
+        // Update file info UI
+        document.getElementById('fileInfo').style.display = 'none';
+        fileInput.value = ''; // reset file input
+
         addToHistory(file.name, folderUID);
         stats.uploads++;
         stats.dashboards++;
         updateStats();
 
         showNotification(`Dashboard created: ${data.dashboard_uid}`, 'success');
-
-        document.getElementById('uploadForm').reset();
-        document.getElementById('fileInfo').style.display = 'none';
     } catch (error) {
         showNotification(`Error: ${error.message}`, 'error');
     } finally {
@@ -139,6 +148,41 @@ async function handleUpload() {
         uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Generate Dashboard';
     }
 }
+
+// ---------------- Drag & Drop support ----------------
+const fileUploadArea = document.getElementById('fileUploadArea');
+const fileInput = document.getElementById('csvFile');
+const fileInfo = document.getElementById('fileInfo');
+
+fileUploadArea.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => displayFileInfo(fileInput.files[0]));
+
+fileUploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    fileUploadArea.classList.add('dragover');
+});
+
+fileUploadArea.addEventListener('dragleave', () => {
+    fileUploadArea.classList.remove('dragover');
+});
+
+fileUploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    fileUploadArea.classList.remove('dragover');
+    const droppedFile = e.dataTransfer.files[0];
+    fileInput.files = e.dataTransfer.files; // assign to hidden input
+    displayFileInfo(droppedFile);
+});
+
+function displayFileInfo(file) {
+    if (!file) return;
+    fileInfo.style.display = 'block';
+    fileInfo.textContent = `Selected file: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+}
+
+// ---------------- Bind form submit ----------------
+document.getElementById('uploadForm').addEventListener('submit', handleUpload);
+
 
 // Export functionality
 async function exportDashboard(format) {
@@ -243,8 +287,7 @@ function showNotification(message, type = 'info') {
         ${message}
     `;
 
-    message=document.getElementById('message');
-    message.appendChild(notification);
+    document.body.appendChild(notification);
 
     setTimeout(() => {
         notification.remove();
@@ -300,21 +343,98 @@ document.getElementById('settingsForm').addEventListener('submit', updateSetting
 function getCurrentSettings() {
     fetch('/api/current_settings')
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch current settings');
-            }
+            if (!response.ok) throw new Error('Failed to fetch current settings');
             return response.json();
         })
         .then(data => {
             if (data.grafanaURL) {
                 document.getElementById('grafanaURL').value = data.grafanaURL;
             }
+
             if (data.grafanaKEY) {
-                document.getElementById('grafanaKEY').value = data.grafanaKEY;
+                // Show read-only display
+                document.getElementById('grafanaKeyDisplay').style.display = 'inline';
+                document.getElementById('changeKeyBtn').style.display = 'inline-block';
+                document.getElementById('grafanaKEY').style.display = 'none';
+            } else {
+                // If no key configured, show input box
+                document.getElementById('grafanaKeyDisplay').style.display = 'none';
+                document.getElementById('changeKeyBtn').style.display = 'none';
+                document.getElementById('grafanaKEY').style.display = 'block';
             }
         })
         .catch(error => {
             showNotification(`Error loading settings: ${error.message}`, 'error');
+            console.error(error);
+        });
+}
+
+// Show input box when user wants to change key
+document.getElementById('changeKeyBtn').addEventListener('click', () => {
+    document.getElementById('grafanaKeyDisplay').style.display = 'none';
+    document.getElementById('changeKeyBtn').style.display = 'none';
+    const keyInput = document.getElementById('grafanaKEY');
+    keyInput.style.display = 'block';
+    keyInput.value = '';
+    keyInput.focus();
+});
+
+// Form submit
+document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const url = document.getElementById('grafanaURL').value.trim();
+    const keyInput = document.getElementById('grafanaKEY');
+    const key = keyInput.style.display === 'block' ? keyInput.value.trim() : null;
+
+    const payload = { grafanaURL: url };
+    if (key) payload.grafanaKEY = key;
+
+    try {
+        const response = await fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to save settings');
+
+        showNotification('Settings updated successfully', 'success');
+        // Reset display if API key was updated
+        if (key) {
+            document.getElementById('grafanaKeyDisplay').textContent = 'Already Configured';
+            document.getElementById('grafanaKeyDisplay').style.display = 'inline';
+            document.getElementById('changeKeyBtn').style.display = 'inline-block';
+            keyInput.style.display = 'none';
+        }
+    } catch (err) {
+        showNotification(`Error: ${err.message}`, 'error');
+    }
+});
+
+
+function getGrafanaFolders() { 
+    fetch('/api/grafana/folders')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch Grafana folders');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(data);
+            grafanaFolders = data || [];  // <- changed this line
+            const folderSelect = document.getElementById('folderSelect');
+            folderSelect.innerHTML = ''; // clear existing options
+
+            grafanaFolders.forEach(folder => {
+                const option = document.createElement('option');
+                option.value = folder.uid;
+                option.textContent = folder.title;
+                folderSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            showNotification(`Error loading Grafana folders: ${error.message}`, 'error');
             console.error(error);
         });
 }
